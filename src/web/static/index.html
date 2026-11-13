@@ -1,0 +1,1047 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>야구학습센터 예약</title>
+<style>
+  /* 디자인 토큰: 기업 홈페이지형 디자인 언어 참고 (포인트 블루 · 블랙 · 그레이 스케일) */
+  :root {
+    --point: #2189ff; --point-hover: #1778ea; --sub: #684dff;
+    --black: #000; --gray900: #111; --gray800: #333; --gray700: #666; --gray500: #888;
+    --line: #ddd; --line-soft: #ebebeb; --bg-soft: #f5f6f7; --white: #fff; --red: #ff4002;
+    --text: var(--gray900); --muted: var(--gray700); --panel: var(--white); --page: var(--bg-soft);
+    --bubble-user: var(--black); --radius: 10px; --radius-sm: 8px;
+    --shadow: 0 10px 30px rgba(0, 0, 0, .06);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --text: #f2f3f5; --muted: #a3a8b0; --panel: #15171b; --page: #0b0c0e;
+      --line: #2b2f36; --line-soft: #22262c; --bg-soft: #1b1e23; --bubble-user: #2189ff;
+      --shadow: 0 10px 30px rgba(0, 0, 0, .4);
+    }
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; }
+  body { background: var(--page); color: var(--text); -webkit-font-smoothing: antialiased;
+         font-family: "Noto Sans KR", "Noto Sans", -apple-system, "Segoe UI", "Malgun Gothic", "Apple SD Gothic Neo", sans-serif; }
+  a { color: inherit; }
+
+  /* 헤더 */
+  .gnb { position: sticky; top: 0; z-index: 10; background: rgba(255, 255, 255, .92); backdrop-filter: blur(8px);
+         border-bottom: 1px solid var(--line-soft); }
+  @media (prefers-color-scheme: dark) { .gnb { background: rgba(21, 23, 27, .92); } }
+  .gnb__inner { max-width: 1200px; margin: 0 auto; padding: 0 24px; height: 64px; display: flex; align-items: center; gap: 24px; }
+  .brand { font-weight: 800; font-size: 18px; letter-spacing: -.02em; display: flex; align-items: center; gap: 8px; }
+  .brand__mark { width: 22px; height: 22px; border-radius: 50%; background: conic-gradient(var(--point), var(--sub), var(--point)); }
+  .gnb nav { display: flex; gap: 4px; font-size: 14px; height: 100%; }
+  .gnb nav a { display: flex; align-items: center; padding: 0 12px; color: var(--muted); text-decoration: none;
+               border-bottom: 2px solid transparent; transition: color .15s; }
+  .gnb nav a:hover { color: var(--text); }
+  .gnb nav a.on { color: var(--text); font-weight: 700; border-bottom-color: var(--point); }
+  .view[hidden] { display: none !important; }
+
+  /* 공통 섹션 */
+  .page { max-width: 1200px; margin: -24px auto 40px; padding: 0 24px; display: grid; gap: 24px; }
+  .section { padding: 24px; }
+  .section__head { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; flex-wrap: wrap; margin-bottom: 18px; }
+  .section__head h2 { margin: 0; font-size: 20px; font-weight: 800; letter-spacing: -.02em; }
+  .section__head p { margin: 4px 0 0; font-size: 13px; color: var(--muted); }
+  .label { font-size: 11px; font-weight: 800; letter-spacing: .08em; color: var(--point); text-transform: uppercase; }
+  .btn-line { border: 1px solid var(--line); background: var(--panel); color: var(--text); font: inherit; font-size: 13px;
+              padding: 8px 14px; border-radius: var(--radius-sm); cursor: pointer; transition: border-color .15s, color .15s; }
+  .btn-line:hover { border-color: var(--point); color: var(--point); }
+
+  /* 시설 안내 */
+  .fac-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px; }
+  .fac { overflow: hidden; display: flex; flex-direction: column; }
+  .fac__visual { height: 150px; position: relative; display: flex; align-items: flex-end; padding: 18px 22px; color: var(--white); }
+  .fac__visual.batting { background: linear-gradient(135deg, #0b1d3a, #2189ff); }
+  .fac__visual.pitching { background: linear-gradient(135deg, #1d1240, #684dff); }
+  .fac__visual .count { font-size: 44px; font-weight: 800; letter-spacing: -.03em; line-height: 1; }
+  .fac__visual .count small { font-size: 16px; margin-left: 4px; font-weight: 600; opacity: .85; }
+  .fac__visual .ids { position: absolute; top: 16px; right: 18px; font-size: 12px; opacity: .8; letter-spacing: .04em; }
+  .fac__body { padding: 20px 22px 22px; display: grid; gap: 10px; }
+  .fac__body h3 { margin: 0; font-size: 17px; font-weight: 800; }
+  .fac__body p { margin: 0; font-size: 13px; color: var(--muted); line-height: 1.6; }
+  .fac__units { display: flex; flex-wrap: wrap; gap: 6px; }
+  .fac__units span { font-size: 12px; padding: 4px 9px; border-radius: 999px; background: var(--bg-soft); color: var(--muted); }
+  .facts { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); border-top: 1px solid var(--line-soft); }
+  .facts div { padding: 18px 22px; border-right: 1px solid var(--line-soft); }
+  .facts div:last-child { border-right: 0; }
+  .facts b { display: block; font-size: 22px; font-weight: 800; letter-spacing: -.02em; }
+  .facts span { font-size: 12px; color: var(--muted); }
+  .board__ctrl { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+  .board__ctrl input[type=date] { height: 38px; padding: 0 10px; border: 1px solid var(--line); border-radius: var(--radius-sm);
+                                  background: var(--panel); color: var(--text); font: inherit; font-size: 13px; }
+  .seg { display: inline-flex; border: 1px solid var(--line); border-radius: var(--radius-sm); overflow: hidden; }
+  .seg button { border: 0; background: var(--panel); color: var(--muted); font: inherit; font-size: 13px; padding: 8px 14px; cursor: pointer; }
+  .seg button.on { background: var(--black); color: var(--white); font-weight: 700; }
+  @media (prefers-color-scheme: dark) { .seg button.on { background: var(--point); } }
+  .board { overflow-x: auto; }
+  .board table { width: auto; border-collapse: separate; border-spacing: 3px; font-size: 12px; }
+  .board th, .board td { border: 0; padding: 0; white-space: nowrap; background: none; }
+  .board thead th { font-weight: 600; color: var(--gray500); text-align: center; font-size: 11px; padding-bottom: 4px; }
+  .board thead th.peak { color: var(--red); font-weight: 800; }
+  .board tbody th { text-align: left; padding-right: 10px; font-size: 13px; font-weight: 700; color: var(--text); }
+  .cell { width: 38px; height: 38px; border-radius: 6px; border: 0; font: inherit; font-size: 12px; font-weight: 700; cursor: pointer;
+          display: grid; place-items: center; transition: transform .1s; }
+  .cell:hover { transform: scale(1.08); }
+  .cell.lv3 { background: var(--point); color: var(--white); }
+  .cell.lv2 { background: rgba(33, 137, 255, .55); color: var(--white); }
+  .cell.lv1 { background: rgba(33, 137, 255, .2); color: var(--point); }
+  .cell.full { background: var(--line-soft); color: var(--gray500); cursor: default; }
+  .cell.member { background: repeating-linear-gradient(45deg, rgba(104, 77, 255, .18) 0 6px, rgba(104, 77, 255, .32) 6px 12px);
+                 color: var(--sub); cursor: default; }
+  .legend { display: flex; gap: 16px; flex-wrap: wrap; margin-top: 14px; font-size: 12px; color: var(--muted); }
+  .legend i { display: inline-block; width: 12px; height: 12px; border-radius: 3px; vertical-align: -2px; margin-right: 6px; }
+  .pick { margin-top: 16px; padding: 14px 16px; border-radius: var(--radius-sm); background: var(--bg-soft); font-size: 13px;
+          display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+  .pick b { font-weight: 800; }
+  .pick .send { height: 38px; padding: 0 16px; margin-left: auto; }
+
+  /* 이용 규정 */
+  .highlights { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px; }
+  .hl { padding: 22px; display: grid; gap: 8px; }
+  .hl b { font-size: 16px; font-weight: 800; letter-spacing: -.01em; }
+  .hl p { margin: 0; font-size: 13px; color: var(--muted); line-height: 1.6; }
+  .rules-search { height: 40px; width: min(280px, 100%); flex: none; }
+  .articles { display: grid; }
+  .article { border-top: 1px solid var(--line-soft); }
+  .article:first-child { border-top: 0; }
+  .article summary { list-style: none; cursor: pointer; display: flex; align-items: center; gap: 14px; padding: 18px 4px; }
+  .article summary::-webkit-details-marker { display: none; }
+  .article summary .no { font-size: 13px; font-weight: 800; color: var(--point); min-width: 44px; }
+  .article summary .title { font-size: 15px; font-weight: 700; }
+  .article summary::after { content: "＋"; margin-left: auto; color: var(--gray500); }
+  .article[open] summary::after { content: "－"; }
+  .article__body { padding: 0 4px 18px 62px; font-size: 14px; line-height: 1.7; color: var(--gray800); }
+  @media (prefers-color-scheme: dark) { .article__body { color: var(--muted); } }
+  .article__body ol, .article__body ul { margin: 0 0 10px; padding-left: 20px; }
+  .article__body .btn-line { margin-top: 4px; }
+  .empty { padding: 24px 4px; font-size: 13px; color: var(--muted); }
+  .gnb__badge { margin-left: auto; font-size: 12px; font-weight: 700; color: var(--point); border: 1px solid var(--point);
+                padding: 4px 10px; border-radius: 999px; letter-spacing: .04em; }
+
+  /* 히어로 */
+  .hero { background: radial-gradient(1200px 400px at 85% 0%, rgba(104, 77, 255, .45), transparent 60%),
+                      radial-gradient(900px 380px at 10% 100%, rgba(33, 137, 255, .40), transparent 60%), var(--black);
+          color: var(--white); }
+  .hero__inner { max-width: 1200px; margin: 0 auto; padding: 56px 24px 48px; }
+  .eyebrow { font-size: 13px; font-weight: 700; letter-spacing: .12em; color: #9cc8ff; text-transform: uppercase; }
+  .hero h1 { margin: 12px 0 10px; font-size: clamp(28px, 4.2vw, 48px); line-height: 1.2; letter-spacing: -.03em; font-weight: 800; }
+  .hero h1 em { font-style: normal; background: linear-gradient(90deg, #6fb3ff, #a594ff); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .hero p { margin: 0; color: #c9ced6; font-size: 15px; line-height: 1.6; max-width: 640px; }
+  .stats { display: flex; flex-wrap: wrap; gap: 12px 48px; margin: 32px 0 0; padding: 24px 0 0; border-top: 1px solid rgba(255, 255, 255, .18); list-style: none; }
+  .stats li { display: flex; flex-direction: column; gap: 4px; }
+  .stats strong { font-size: 34px; font-weight: 800; letter-spacing: -.02em; }
+  .stats strong small { font-size: 15px; font-weight: 600; margin-left: 4px; color: #c9ced6; }
+  .stats span { font-size: 13px; color: #9aa3ad; }
+
+  /* 본문 레이아웃 */
+  .main { max-width: 1200px; margin: -24px auto 40px; padding: 0 24px; display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 24px; align-items: start; }
+  .card { background: var(--panel); border: 1px solid var(--line-soft); border-radius: var(--radius); box-shadow: var(--shadow); }
+
+  /* 채팅 */
+  .chat { display: flex; flex-direction: column; height: min(720px, calc(100vh - 120px)); min-height: 520px; }
+  .chat__head { padding: 18px 22px; border-bottom: 1px solid var(--line-soft); display: flex; align-items: center; gap: 10px; }
+  .chat__head h2 { margin: 0; font-size: 16px; font-weight: 800; letter-spacing: -.01em; }
+  .status { font-size: 12px; color: var(--muted); display: flex; align-items: center; gap: 6px; margin-left: auto; }
+  .status::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: #18b26b; }
+  #log { flex: 1; overflow-y: auto; padding: 22px; display: flex; flex-direction: column; gap: 16px; }
+  .row { display: flex; gap: 10px; align-items: flex-end; }
+  .row.user { justify-content: flex-end; }
+  .avatar { flex: none; width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; font-size: 13px; font-weight: 800;
+            color: var(--white); background: linear-gradient(135deg, var(--point), var(--sub)); }
+  .bubble { max-width: min(560px, 86%); padding: 12px 16px; border-radius: 16px; font-size: 14px; line-height: 1.65; overflow-wrap: anywhere; }
+  .user .bubble { background: var(--bubble-user); color: var(--white); border-bottom-right-radius: 4px; }
+  .bot .bubble { background: var(--bg-soft); color: var(--text); border-bottom-left-radius: 4px; }
+  .bot .bubble.error { color: var(--red); }
+  .bubble p { margin: 6px 0; } .bubble p:first-child { margin-top: 0; } .bubble p:last-child { margin-bottom: 0; }
+  .bubble ul { margin: 6px 0; padding-left: 18px; }
+  .bubble hr { border: 0; border-top: 1px solid var(--line); margin: 12px 0; }
+  .bubble blockquote { margin: 8px 0; padding: 6px 12px; border-left: 3px solid var(--point); background: var(--panel); border-radius: 0 6px 6px 0; color: var(--muted); }
+  .bubble h4 { margin: 10px 0 4px; font-size: 14px; font-weight: 800; }
+  .bubble strong { font-weight: 800; }
+  .table-wrap { overflow-x: auto; margin: 8px 0; border-radius: var(--radius-sm); border: 1px solid var(--line); background: var(--panel); }
+  table { border-collapse: collapse; font-size: 13px; width: 100%; }
+  th, td { padding: 8px 12px; text-align: left; white-space: nowrap; border-bottom: 1px solid var(--line-soft); }
+  tr:last-child td { border-bottom: 0; }
+  th { font-weight: 700; color: var(--muted); background: var(--bg-soft); font-size: 12px; }
+  .typing { display: inline-flex; gap: 4px; padding: 4px 0; }
+  .typing i { width: 6px; height: 6px; border-radius: 50%; background: var(--gray500); animation: blink 1.2s infinite; }
+  .typing i:nth-child(2) { animation-delay: .2s; } .typing i:nth-child(3) { animation-delay: .4s; }
+  @keyframes blink { 0%, 80%, 100% { opacity: .25; } 40% { opacity: 1; } }
+
+  /* 처리 과정 */
+  details.trace { margin-top: 10px; font-size: 12px; color: var(--muted); }
+  details.trace summary { cursor: pointer; list-style: none; display: inline-flex; align-items: center; gap: 6px; font-weight: 700; color: var(--point); }
+  details.trace summary::-webkit-details-marker { display: none; }
+  details.trace summary::after { content: "＋"; font-size: 11px; }
+  details.trace[open] summary::after { content: "－"; }
+  .steps { list-style: none; margin: 10px 0 0; padding: 0 0 0 4px; }
+  .steps li { position: relative; padding: 0 0 10px 18px; border-left: 1px solid var(--line); }
+  .steps li:last-child { border-left-color: transparent; padding-bottom: 0; }
+  .steps li::before { content: ""; position: absolute; left: -5px; top: 3px; width: 9px; height: 9px; border-radius: 50%; background: var(--point); }
+  .steps b { color: var(--text); font-weight: 700; }
+  .steps code, .refs code { display: block; margin-top: 2px; font-size: 11px; color: var(--gray500); white-space: pre-wrap; word-break: break-all; }
+  .refs { margin: 8px 0 0; display: flex; flex-wrap: wrap; gap: 6px; }
+  .refs span { font-size: 11px; padding: 3px 8px; border-radius: 999px; background: var(--panel); border: 1px solid var(--line); }
+
+  /* 입력 */
+  form { display: flex; gap: 10px; padding: 16px 18px; border-top: 1px solid var(--line-soft); }
+  input { flex: 1; min-width: 0; height: 48px; padding: 0 16px; border-radius: var(--radius-sm); border: 1px solid var(--line);
+          background: var(--panel); color: var(--text); font: inherit; font-size: 14px; outline: none; transition: border-color .15s; }
+  input:focus { border-color: var(--point); }
+  button.send { height: 48px; padding: 0 22px; border: 0; border-radius: var(--radius-sm); background: var(--point); color: var(--white);
+                font: inherit; font-size: 14px; font-weight: 700; cursor: pointer; transition: background .15s; }
+  button.send:hover { background: var(--point-hover); }
+  button:disabled { opacity: .45; cursor: default; }
+
+  /* 사이드 */
+  .side { display: flex; flex-direction: column; gap: 24px; }
+  .side__title { margin: 0; padding: 18px 20px 6px; font-size: 13px; font-weight: 800; letter-spacing: .02em; }
+  .quick { list-style: none; margin: 0; padding: 6px 12px 12px; }
+  .quick button { width: 100%; text-align: left; border: 0; background: none; color: var(--text); font: inherit; cursor: pointer;
+                  padding: 12px 10px; border-radius: var(--radius-sm); display: grid; gap: 4px; transition: background .15s; }
+  .quick button:hover { background: var(--bg-soft); }
+  .quick .tag { font-size: 11px; font-weight: 700; color: var(--point); letter-spacing: .02em; }
+  .quick .q { font-size: 13px; line-height: 1.45; }
+  .quick .more { font-size: 12px; color: var(--muted); }
+  .rules { list-style: none; margin: 0; padding: 4px 20px 18px; display: grid; gap: 12px; font-size: 13px; line-height: 1.5; }
+  .rules li { display: grid; grid-template-columns: 26px 1fr; gap: 8px; color: var(--muted); }
+  .rules b { display: block; color: var(--text); font-weight: 700; }
+  .rules .no { width: 26px; height: 26px; border-radius: 50%; background: var(--bg-soft); display: grid; place-items: center; font-size: 12px; font-weight: 800; color: var(--point); }
+
+  /* 관리자 · 차트 (dataviz: 범주 색은 검증 통과한 블루·오렌지, 글자는 텍스트 색) */
+  :root { --series-1: #2189ff; --series-2: #eb6834; --grid: #ebebeb; --warn-ink: #b54708; --warn-bg: #fff4e5; }
+  @media (prefers-color-scheme: dark) { :root { --series-1: #3987e5; --series-2: #d95926; --grid: #2b2f36; --warn-ink: #f5b971; --warn-bg: #2a2116; } }
+  .admin-note { font-size: 12px; color: var(--muted); }
+  .kpis { display: grid; grid-template-columns: 1.4fr repeat(4, minmax(0, 1fr)); gap: 0; }
+  .kpi { padding: 20px 22px; border-right: 1px solid var(--line-soft); display: grid; gap: 6px; align-content: start; }
+  .kpi:last-child { border-right: 0; }
+  .kpi .k-label { font-size: 12px; color: var(--muted); }
+  .kpi .k-value { font-size: 28px; font-weight: 800; letter-spacing: -.02em; }
+  .kpi .k-value small { font-size: 14px; font-weight: 600; color: var(--muted); margin-left: 3px; }
+  .kpi.hero .k-value { font-size: 48px; line-height: 1; }
+  .kpi .k-sub { font-size: 12px; color: var(--muted); }
+  .charts { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 24px; }
+  .chart-card { padding: 22px; display: grid; gap: 12px; align-content: start; min-width: 0; }
+  .chart-card h3 { margin: 0; font-size: 15px; font-weight: 800; }
+  .chart-card .sub { margin: -6px 0 0; font-size: 12px; color: var(--muted); }
+  .legend-row { display: flex; gap: 14px; font-size: 12px; color: var(--muted); flex-wrap: wrap; }
+  .legend-row i { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 6px; vertical-align: -1px; }
+  .chart svg { width: 100%; height: auto; display: block; overflow: visible; }
+  .chart .axis text { fill: var(--gray500); font-size: 11px; font-variant-numeric: tabular-nums; }
+  .chart .axis line { stroke: var(--grid); stroke-width: 1; }
+  .chart .bar { transition: opacity .12s; cursor: default; }
+  .chart .hit:hover + .bar, .chart .bar:hover { opacity: .78; }
+  .chart .lbl { fill: var(--text); font-size: 11px; font-weight: 700; }
+  .chart .thr { stroke: var(--warn-ink); stroke-width: 1; }
+  .chart .thr-lbl { fill: var(--warn-ink); font-size: 11px; font-weight: 700; }
+  .tip { position: fixed; z-index: 50; pointer-events: none; background: var(--panel); color: var(--text); border: 1px solid var(--line);
+         border-radius: 8px; box-shadow: var(--shadow); padding: 8px 10px; font-size: 12px; min-width: 120px; display: none; }
+  .tip .t-title { color: var(--muted); margin-bottom: 4px; }
+  .tip .t-row { display: flex; align-items: center; gap: 8px; justify-content: space-between; }
+  .tip .t-row b { font-size: 13px; }
+  .tip .t-key { display: inline-block; width: 12px; height: 2px; margin-right: 6px; vertical-align: middle; }
+  details.table-view summary { font-size: 12px; color: var(--muted); cursor: pointer; }
+  details.table-view table { margin-top: 8px; }
+  details.table-view td, details.table-view th { font-variant-numeric: tabular-nums; }
+  .hbar { display: grid; grid-template-columns: 80px 1fr 52px; align-items: center; gap: 10px; font-size: 13px; }
+  .hbar .track { height: 24px; background: var(--bg-soft); border-radius: 0 4px 4px 0; overflow: hidden; }
+  .hbar .fill { height: 100%; background: var(--series-1); border-radius: 0 4px 4px 0; }
+  .hbar b { text-align: right; font-variant-numeric: tabular-nums; }
+  .status-warn { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 700; color: var(--warn-ink);
+                 background: var(--warn-bg); padding: 4px 10px; border-radius: 999px; }
+  .insight { display: grid; gap: 8px; font-size: 13px; line-height: 1.6; }
+  .insight ul { margin: 0; padding-left: 18px; }
+  .admin-grid { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 24px; align-items: start; }
+  .slot-form { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)) auto; gap: 8px; align-items: end; }
+  .slot-form label { display: grid; gap: 4px; font-size: 12px; color: var(--muted); }
+  .slot-form input, .slot-form select { height: 38px; padding: 0 10px; border: 1px solid var(--line); border-radius: var(--radius-sm);
+                                         background: var(--panel); color: var(--text); font: inherit; font-size: 13px; min-width: 0; }
+  .slot-form .send { height: 38px; padding: 0 16px; }
+  .form-msg { font-size: 12px; min-height: 18px; margin-top: 6px; }
+  .form-msg.err { color: var(--red); } .form-msg.ok { color: #18a058; }
+  .closures { list-style: none; margin: 12px 0 0; padding: 0; display: grid; gap: 6px; }
+  .closures li { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: var(--radius-sm); background: var(--bg-soft); font-size: 13px; }
+  .closures li span { color: var(--muted); font-size: 12px; }
+  .closures li button { margin-left: auto; padding: 5px 10px; font-size: 12px; }
+  .fb-avg { display: flex; align-items: baseline; gap: 10px; }
+  .fb-avg strong { font-size: 48px; font-weight: 800; letter-spacing: -.02em; line-height: 1; }
+  .fb-avg span { color: var(--muted); font-size: 13px; }
+  .fb-dist { display: grid; gap: 6px; margin-top: 10px; }
+  .fb-dist .hbar { grid-template-columns: 34px 1fr 28px; }
+  .fb-dist .track { height: 10px; border-radius: 0 4px 4px 0; }
+  .fb-recent { list-style: none; margin: 12px 0 0; padding: 0; display: grid; gap: 8px; font-size: 13px; }
+  .fb-recent li { padding: 10px 12px; background: var(--bg-soft); border-radius: var(--radius-sm); }
+  .fb-recent .stars { color: var(--point); font-size: 12px; margin-right: 6px; }
+  .cell.maint { background: repeating-linear-gradient(135deg, var(--line-soft) 0 6px, var(--line) 6px 12px); color: var(--gray500); cursor: default; }
+
+  /* 채팅 만족도 */
+  .fb { margin-top: 10px; padding-top: 10px; border-top: 1px dashed var(--line); display: flex; flex-wrap: wrap; align-items: center; gap: 8px; font-size: 12px; color: var(--muted); }
+  .fb .rate { display: inline-flex; gap: 2px; }
+  .fb .rate button { border: 0; background: none; padding: 0 1px; font-size: 18px; line-height: 1; cursor: pointer; color: var(--line); transition: color .1s; }
+  .fb .rate button.on { color: var(--point); }
+  .fb input { height: 30px; flex: 1; min-width: 120px; font-size: 12px; padding: 0 10px; }
+  .fb .btn-line { padding: 5px 10px; font-size: 12px; }
+
+  @media (max-width: 960px) {
+    .kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .kpi { border-bottom: 1px solid var(--line-soft); }
+    .kpi.hero { grid-column: 1 / -1; }
+    .charts, .admin-grid { grid-template-columns: 1fr; }
+    .slot-form { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  }
+
+  footer { max-width: 1200px; margin: 0 auto; padding: 0 24px 32px; font-size: 12px; color: var(--gray500); }
+
+  @media (max-width: 960px) {
+    .main { grid-template-columns: 1fr; margin-top: -16px; }
+    .fac-grid, .highlights { grid-template-columns: 1fr; }
+    .facts { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .facts div:nth-child(2) { border-right: 0; }
+    .facts div:nth-child(-n+2) { border-bottom: 1px solid var(--line-soft); }
+    .article__body { padding-left: 4px; }
+    .side { order: 2; }
+    .hero__inner { padding: 40px 20px 40px; }
+    .stats strong { font-size: 28px; }
+  }
+  @media (max-width: 700px) {
+    .gnb nav { display: flex; }
+    .gnb nav a { padding: 0 8px; font-size: 13px; }
+    .gnb__badge { display: none; }
+    .brand { font-size: 16px; }
+  }
+  @media (max-width: 520px) {
+    .gnb__inner, .main, .page, footer { padding-left: 16px; padding-right: 16px; }
+    .gnb__inner { gap: 10px; }
+    .section { padding: 18px; }
+    .chat { height: calc(100vh - 96px); }
+    #log { padding: 16px; }
+    button.send { padding: 0 16px; }
+  }
+</style>
+</head>
+<body>
+<header class="gnb">
+  <div class="gnb__inner">
+    <div class="brand"><span class="brand__mark"></span>Baseball Lab</div>
+    <nav aria-label="메뉴">
+      <a href="#reserve" data-view="reserve" class="on">예약</a>
+      <a href="#facility" data-view="facility">시설 안내</a>
+      <a href="#rules" data-view="rules">이용 규정</a>
+      <a href="#admin" data-view="admin">관리자</a>
+    </nav>
+    <span class="gnb__badge">AI AGENT</span>
+  </div>
+</header>
+
+<section class="hero">
+  <div class="hero__inner">
+    <div class="eyebrow" id="heroEyebrow">Reservation Agent</div>
+    <h1 id="heroTitle">원하는 시간에,<br><em>기다림 없이</em> 연습하세요</h1>
+    <p id="heroDesc">빈 시간 조회부터 예약, 이용 규정까지 대화로 해결합니다. 정기 회원은 수강증 번호, 이름+전화번호, QR 중 하나를 함께 알려주세요.</p>
+    <ul class="stats">
+      <li><strong>5<small>개</small></strong><span>배팅케이지</span></li>
+      <li><strong>10<small>대</small></strong><span>피칭머신</span></li>
+      <li><strong>24<small>시간</small></strong><span>연중 운영 · 1시간 단위 예약</span></li>
+    </ul>
+  </div>
+</section>
+
+<main class="main view" id="view-reserve">
+  <section class="card chat" aria-label="예약 도우미 대화">
+    <div class="chat__head">
+      <span class="avatar">AI</span>
+      <h2>예약 도우미</h2>
+      <span class="status">응답 가능</span>
+      <button type="button" class="btn-line" id="newChat" title="대화 기록을 지우고 새로 시작합니다">새 대화</button>
+    </div>
+    <div id="log" aria-live="polite"></div>
+    <form id="form">
+      <input id="input" autocomplete="off" placeholder="예) 수강증 M-1001로 2026-11-20 17시에 배팅케이지 예약해 주세요" aria-label="질문 입력">
+      <button type="submit" class="send" id="send">보내기</button>
+    </form>
+  </section>
+
+  <aside class="side">
+    <section class="card">
+      <h3 class="side__title">빠른 질문</h3>
+      <ul class="quick" id="quick"></ul>
+    </section>
+    <section class="card">
+      <h3 class="side__title">이용 안내</h3>
+      <ul class="rules">
+        <li><span class="no">1</span><div><b>17시 슬롯은 정기 회원 전용</b>17:00~18:00 슬롯은 유효한 수강증이 있는 정기 회원만 예약할 수 있습니다.</div></li>
+        <li><span class="no">2</span><div><b>그 외 시간은 먼저 예약한 분 우선</b>18시 슬롯을 포함한 모든 시간은 일반인도 예약할 수 있습니다.</div></li>
+        <li><span class="no">3</span><div><b>개인정보 보호</b>이름과 전화번호는 가려서 보여 드리고, 다른 분의 예약은 예약 여부만 안내합니다.</div></li>
+      </ul>
+    </section>
+  </aside>
+</main>
+
+<main class="page view" id="view-facility" hidden>
+  <div class="fac-grid">
+    <article class="card fac">
+      <div class="fac__visual batting"><span class="ids">BC-1 ~ BC-5</span><span class="count">5<small>개</small></span></div>
+      <div class="fac__body">
+        <span class="label">Batting Cage</span>
+        <h3>배팅케이지</h3>
+        <p>그물로 둘러싼 독립 타석에서 날아오는 공을 직접 쳐 보는 타격 훈련 공간입니다. 스윙 궤적과 타이밍을 반복해서 다듬기 좋습니다.</p>
+        <div class="fac__units"><span>1번</span><span>2번</span><span>3번</span><span>4번</span><span>5번</span></div>
+      </div>
+    </article>
+    <article class="card fac">
+      <div class="fac__visual pitching"><span class="ids">PM-1 ~ PM-10</span><span class="count">10<small>대</small></span></div>
+      <div class="fac__body">
+        <span class="label">Pitching Machine</span>
+        <h3>피칭머신</h3>
+        <p>공을 일정한 리듬으로 던져 주는 개인 훈련 머신입니다. 혼자서도 선구안과 컨택 감각을 집중적으로 연습할 수 있습니다.</p>
+        <div class="fac__units"><span>1번</span><span>2번</span><span>3번</span><span>4번</span><span>5번</span><span>6번</span><span>7번</span><span>8번</span><span>9번</span><span>10번</span></div>
+      </div>
+    </article>
+  </div>
+
+  <section class="card">
+    <div class="facts">
+      <div><b>24시간</b><span>연중 운영</span></div>
+      <div><b>1시간</b><span>예약 단위 (시설 1개 기준)</span></div>
+      <div><b>17:00~18:00</b><span>정기 회원 전용 슬롯</span></div>
+      <div><b>18~20시</b><span>가장 붐비는 시간대</span></div>
+    </div>
+  </section>
+
+  <section class="card section">
+    <div class="section__head">
+      <div>
+        <span class="label">Live Availability</span>
+        <h2>시간대별 빈자리</h2>
+        <p>예약 현황으로 실시간 계산합니다. 칸을 누르면 그 시간으로 예약을 문의할 수 있어요.</p>
+      </div>
+      <div class="board__ctrl">
+        <input type="date" id="slotDate" value="2026-11-20" aria-label="날짜">
+        <div class="seg" role="group" aria-label="회원 구분">
+          <button type="button" data-member="일반인" class="on">일반인</button>
+          <button type="button" data-member="정기 회원">정기 회원</button>
+        </div>
+      </div>
+    </div>
+    <div class="board" id="board"><div class="empty">불러오는 중…</div></div>
+    <div class="legend">
+      <span><i style="background:var(--point)"></i>여유</span>
+      <span><i style="background:rgba(33,137,255,.55)"></i>보통</span>
+      <span><i style="background:rgba(33,137,255,.2)"></i>얼마 남지 않음</span>
+      <span><i style="background:var(--line-soft)"></i>만석</span>
+      <span><i style="background:repeating-linear-gradient(45deg,rgba(104,77,255,.18) 0 3px,rgba(104,77,255,.32) 3px 6px)"></i>정기 회원 전용</span>
+      <span style="color:var(--red)">● 시간 숫자가 붉은 칸은 피크 시간</span>
+    </div>
+    <div class="pick" id="pick" hidden></div>
+  </section>
+</main>
+
+<main class="page view" id="view-rules" hidden>
+  <div class="highlights">
+    <div class="card hl"><span class="label">Members Only</span><b>17시 슬롯은 정기 회원 전용</b>
+      <p>17:00~18:00 슬롯의 배팅케이지·피칭머신은 유효한 수강증이 있는 정기 회원만 예약할 수 있습니다.</p></div>
+    <div class="card hl"><span class="label">First Come</span><b>그 외 시간은 먼저 예약한 분 우선</b>
+      <p>18시 슬롯을 포함한 모든 시간은 일반인도 예약할 수 있고, 예약자가 현장 방문자보다 우선합니다.</p></div>
+    <div class="card hl"><span class="label">Privacy</span><b>개인정보는 가려서 안내</b>
+      <p>이름과 전화번호는 일부를 가려 보여 드리고, 다른 분의 예약은 예약 여부만 안내합니다.</p></div>
+  </div>
+
+  <section class="card section">
+    <div class="section__head">
+      <div>
+        <span class="label">Center Rules</span>
+        <h2>센터 이용 규정</h2>
+        <p>예약 도우미가 안내·거절할 때 근거로 삼는 규정 원문입니다.</p>
+      </div>
+      <input class="rules-search" id="ruleSearch" type="search" placeholder="규정 검색 (예: 수강증, 예약)" aria-label="규정 검색">
+    </div>
+    <div class="articles" id="articles"><div class="empty">불러오는 중…</div></div>
+  </section>
+</main>
+
+<main class="page view" id="view-admin" hidden>
+  <section class="card">
+    <div class="kpis" id="kpis"><div class="kpi"><span class="k-label">불러오는 중…</span></div></div>
+  </section>
+
+  <div class="charts">
+    <section class="card chart-card">
+      <h3>일일 방문자 수</h3>
+      <p class="sub" id="dailySub">예약·이용 이력 기준, 시설 1개 × 1시간 이용 = 1명</p>
+      <div class="legend-row"><span><i style="background:var(--series-1)"></i>정기 회원</span><span><i style="background:var(--series-2)"></i>일반인</span></div>
+      <div class="chart" id="chartDaily"></div>
+      <details class="table-view"><summary>표로 보기</summary><div class="table-wrap" id="tableDaily"></div></details>
+    </section>
+    <section class="card chart-card">
+      <h3>시간대별 평균 이용률</h3>
+      <p class="sub">전체 15개 시설 기준. 선 위 시간대는 슬롯 확대 검토 대상</p>
+      <div class="chart" id="chartHourly"></div>
+      <details class="table-view"><summary>표로 보기</summary><div class="table-wrap" id="tableHourly"></div></details>
+    </section>
+  </div>
+
+  <div class="admin-grid">
+    <section class="card chart-card">
+      <h3>운영 인사이트</h3>
+      <div class="insight" id="insight"></div>
+      <h3 style="margin-top:8px">시설별 평균 이용률</h3>
+      <div id="facilityBars" style="display:grid;gap:8px"></div>
+    </section>
+    <section class="card chart-card">
+      <h3>이용자 만족도</h3>
+      <div id="feedbackBox"></div>
+    </section>
+  </div>
+
+  <section class="card section">
+    <div class="section__head">
+      <div>
+        <span class="label">Slot Management</span>
+        <h2>슬롯 관리</h2>
+        <p>점검할 슬롯을 닫으면 예약 도우미와 시설 안내에도 바로 반영됩니다. 예약이 있는 슬롯은 닫을 수 없고, 정기 회원 전용 시간은 이용 규정 제6조를 따릅니다.</p>
+      </div>
+    </div>
+    <form class="slot-form" id="slotForm">
+      <label>날짜<input type="date" name="date" value="2026-11-22" required></label>
+      <label>시간<select name="hour" id="slotHour"></select></label>
+      <label>시설<select name="facility_id" id="slotFacility"></select></label>
+      <label>사유<input name="reason" value="시설 점검" maxlength="50"></label>
+      <button type="submit" class="send">점검으로 닫기</button>
+    </form>
+    <div class="form-msg" id="slotMsg"></div>
+    <ul class="closures" id="closures"></ul>
+  </section>
+  <p class="admin-note">관리자 화면은 집계 수치만 보여 주며 이용자 개인정보를 포함하지 않습니다. 점검 슬롯과 만족도 응답은 서버가 켜져 있는 동안 유지됩니다.</p>
+</main>
+
+<div class="tip" id="tip" role="tooltip"></div>
+
+<footer>데모 데이터로 동작합니다. 예약 내역은 서버가 켜져 있는 동안 유지됩니다.</footer>
+
+<script>
+const QUICK = [
+  ["예약", "수강증 번호 M-1001로 2026-11-20 17시에 배팅케이지 예약해 주세요"],
+  ["만석 확인", "2026-11-20 19시에 배팅케이지 예약해 주세요"],
+  ["회원 전용 시간", "일반인이에요. 2026-11-20 17시에 피칭머신 예약해 주세요"],
+  ["시설 확인", "2026-11-21 10시에 배팅케이지 6번 예약해 주세요"],
+  ["이용 규정", "정기 회원 전용 시간은 언제예요?"],
+  ["개인정보", "M-1001 회원 전화번호 알려주세요"],
+];
+const STEP_NAMES = {
+  guardrail_input: "입력 점검", facility_check: "시설 번호 확인", retrieve: "규정 검색",
+  "tool:check_membership": "회원 확인", "tool:search_slots": "빈 슬롯 조회",
+  "tool:create_reservation": "예약 처리", answer: "답변 작성",
+};
+const log = document.getElementById("log");
+const form = document.getElementById("form");
+const input = document.getElementById("input");
+const send = document.getElementById("send");
+
+function esc(s) {
+  return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+function inline(s) {
+  return esc(s).replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>").replace(/`([^`]+)`/g, "<code>$1</code>");
+}
+// 답변에 쓰이는 마크다운(표·굵게·목록·구분선·인용·제목)만 간단히 렌더링한다
+function render(md) {
+  const lines = md.replace(/\r/g, "").split("\n");
+  let html = "", i = 0;
+  while (i < lines.length) {
+    const line = lines[i];
+    if (/^\s*\|.*\|\s*$/.test(line)) {
+      const rows = [];
+      while (i < lines.length && /^\s*\|.*\|\s*$/.test(lines[i])) rows.push(lines[i++]);
+      const cells = r => r.trim().replace(/^\||\|$/g, "").split("|").map(c => c.trim());
+      const body = rows.filter(r => !/^\s*\|[\s:|-]+\|\s*$/.test(r));
+      html += '<div class="table-wrap"><table>' + body.map((r, k) =>
+        "<tr>" + cells(r).map(c => k === 0 ? `<th>${inline(c)}</th>` : `<td>${inline(c)}</td>`).join("") + "</tr>"
+      ).join("") + "</table></div>";
+      continue;
+    }
+    if (/^\d+\.\s+/.test(line)) {
+      let items = "";
+      while (i < lines.length && (/^\d+\.\s+/.test(lines[i]) || /^\s+[-*]\s+/.test(lines[i]))) {
+        if (/^\d+\.\s+/.test(lines[i])) items += (items ? "</li>" : "") + "<li>" + inline(lines[i++].replace(/^\d+\.\s+/, ""));
+        else {
+          const sub = [];
+          while (i < lines.length && /^\s+[-*]\s+/.test(lines[i])) sub.push(lines[i++].replace(/^\s+[-*]\s+/, ""));
+          items += "<ul>" + sub.map(t => `<li>${inline(t)}</li>`).join("") + "</ul>";
+        }
+      }
+      html += "<ol>" + items + "</li></ol>";
+      continue;
+    }
+    if (/^\s*[-*]\s+/.test(line)) {
+      const items = [];
+      while (i < lines.length && /^\s*[-*]\s+/.test(lines[i])) items.push(lines[i++].replace(/^\s*[-*]\s+/, ""));
+      html += "<ul>" + items.map(t => `<li>${inline(t)}</li>`).join("") + "</ul>";
+      continue;
+    }
+    if (/^\s*(-{3,}|\*{3,})\s*$/.test(line)) html += "<hr>";
+    else if (/^#{1,4}\s/.test(line)) html += `<h4>${inline(line.replace(/^#+\s*/, ""))}</h4>`;
+    else if (/^>\s?/.test(line)) html += `<blockquote>${inline(line.replace(/^>\s?/, ""))}</blockquote>`;
+    else if (line.trim()) html += `<p>${inline(line)}</p>`;
+    i++;
+  }
+  return html;
+}
+function add(who, html) {
+  const row = document.createElement("div");
+  row.className = "row " + who;
+  row.innerHTML = (who === "bot" ? '<span class="avatar">AI</span>' : "") + `<div class="bubble">${html}</div>`;
+  log.appendChild(row);
+  log.scrollTop = log.scrollHeight;
+  return row.querySelector(".bubble");
+}
+function traceHtml(res) {
+  const steps = res.trace.map(t => {
+    const showInput = t.step.startsWith("tool:") || t.step === "retrieve";
+    return `<li><b>${esc(STEP_NAMES[t.step] || t.step)}</b>${showInput ? `<code>${esc(t.input)}</code>` : ""}</li>`;
+  }).join("");
+  const refs = res.contexts.map(c => `<span>${esc(c.doc_id)}</span>`).join("");
+  return `<details class="trace"><summary>처리 과정 ${res.trace.length}단계 · 근거 ${res.contexts.length}건</summary>` +
+         `<ol class="steps">${steps}</ol>${refs ? `<div class="refs">${refs}</div>` : ""}</details>`;
+}
+async function ask(question) {
+  add("user", esc(question));
+  const bubble = add("bot", '<span class="typing"><i></i><i></i><i></i></span>');
+  send.disabled = true;
+  try {
+    const r = await fetch("/query", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ question, session_id: sessionId }),
+    });
+    if (!r.ok) throw new Error("서버 오류 " + r.status);
+    const res = await r.json();
+    bubble.innerHTML = render(res.answer) + traceHtml(res);
+    bubble.appendChild(feedbackWidget());
+  } catch (e) {
+    bubble.classList.add("error");
+    bubble.textContent = "답변을 받지 못했습니다. 잠시 후 다시 시도해 주세요. (" + e.message + ")";
+  } finally {
+    send.disabled = false;
+    input.focus();
+    log.scrollTop = log.scrollHeight;
+  }
+}
+form.addEventListener("submit", e => {
+  e.preventDefault();
+  const q = input.value.trim();
+  if (!q || send.disabled) return;
+  input.value = "";
+  ask(q);
+});
+const quick = document.getElementById("quick");
+QUICK.forEach(([tag, q]) => {
+  const li = document.createElement("li");
+  const b = document.createElement("button");
+  b.type = "button";
+  b.innerHTML = `<span class="tag">${esc(tag)}</span><span class="q">${esc(q)}</span><span class="more">질문하기 →</span>`;
+  b.onclick = () => { if (!send.disabled) ask(q); };
+  li.appendChild(b);
+  quick.appendChild(li);
+});
+/* ---------- 화면 전환 ---------- */
+const HERO = {
+  reserve: ["Reservation Agent", "원하는 시간에,<br><em>기다림 없이</em> 연습하세요",
+            "빈 시간 조회부터 예약, 이용 규정까지 대화로 해결합니다. 정기 회원은 수강증 번호, 이름+전화번호, QR 중 하나를 함께 알려주세요."],
+  facility: ["Facilities", "배팅케이지 5개, 피칭머신 10대<br><em>24시간</em> 열려 있습니다",
+             "시설을 둘러보고 날짜별 빈자리를 한눈에 확인하세요. 원하는 칸을 누르면 바로 예약 문의로 이어집니다."],
+  rules: ["Center Rules", "모두가 편하게 쓰는<br><em>이용 규정</em>",
+          "예약 도우미는 이 규정을 근거로 안내합니다. 궁금한 조항은 바로 물어보세요."],
+  admin: ["Admin Console", "데이터로 보는<br><em>센터 운영 현황</em>",
+          "이용 이력으로 혼잡 시간대를 찾고, 점검 슬롯과 이용자 만족도를 한곳에서 관리합니다."],
+};
+const loaded = {};
+function show(view) {
+  if (!HERO[view]) view = "reserve";
+  document.querySelectorAll(".view").forEach(v => { v.hidden = v.id !== "view-" + view; });
+  document.querySelectorAll(".gnb nav a").forEach(a => a.classList.toggle("on", a.dataset.view === view));
+  const [eyebrow, title, desc] = HERO[view];
+  document.getElementById("heroEyebrow").textContent = eyebrow;
+  document.getElementById("heroTitle").innerHTML = title;
+  document.getElementById("heroDesc").textContent = desc;
+  if (view === "facility") loadSlots();
+  if (view === "rules" && !loaded.rules) loadRules();
+  if (view === "admin") loadAdmin();
+}
+function askFromAnywhere(q, prefillOnly) {
+  location.hash = "#reserve";
+  show("reserve");
+  window.scrollTo({ top: document.querySelector(".hero").offsetHeight - 40, behavior: "smooth" });
+  if (prefillOnly) {  // 이용자가 직접 채워야 하는 정보(수강증 번호)가 있으면 보내지 않고 입력창에 채워 둔다
+    input.value = q;
+    const at = q.indexOf("M-") + 2;
+    input.focus();
+    input.setSelectionRange(at, at);
+    return;
+  }
+  if (!send.disabled) ask(q);
+}
+window.addEventListener("hashchange", () => show(location.hash.slice(1)));
+
+/* ---------- 시설 안내: 시간대별 빈자리 (파이썬 search_slots 결과) ---------- */
+let memberType = "일반인";
+const PEAK = [18, 19, 20];
+const dateInput = document.getElementById("slotDate");
+const board = document.getElementById("board");
+const pick = document.getElementById("pick");
+function level(n, total) {
+  if (n === 0) return "full";
+  const r = n / total;
+  return r > 0.66 ? "lv3" : r > 0.33 ? "lv2" : "lv1";
+}
+async function loadSlots() {
+  board.innerHTML = '<div class="empty">불러오는 중…</div>';
+  pick.hidden = true;
+  try {
+    const r = await fetch(`/api/slots?date=${encodeURIComponent(dateInput.value)}&member_type=${encodeURIComponent(memberType)}`);
+    if (!r.ok) throw new Error((await r.json()).detail || r.status);
+    const data = await r.json();
+    const head = data.hours.map(h => `<th class="${PEAK.includes(h.hour) ? "peak" : ""}">${h.hour}</th>`).join("");
+    const row = (key, name, total) => `<tr><th>${name}</th>` + data.hours.map(h => {
+      const memberOnly = h.note.includes("정기 회원 전용");
+      const maint = !memberOnly && h[key] === 0 && h.note.startsWith("점검");
+      const cls = memberOnly ? "member" : maint ? "maint" : level(h[key], total);
+      const label = memberOnly ? "회원" : maint ? "점검" : h[key];
+      const title = `${h.hour}:00~${h.hour + 1}:00 ${name} ` +
+                    (memberOnly ? "정기 회원 전용" : maint ? "점검 중" : `${h[key]}/${total} 가능`);
+      return `<td><button type="button" class="cell ${cls}" title="${title}" data-hour="${h.hour}" data-name="${name}"
+              data-left="${h[key]}" ${cls === "full" || memberOnly || maint ? "disabled" : ""}>${label}</button></td>`;
+    }).join("") + "</tr>";
+    board.innerHTML = `<table><thead><tr><th></th>${head}</tr></thead><tbody>` +
+      row("batting", "배팅케이지", data.totals.batting) + row("pitching", "피칭머신", data.totals.pitching) + "</tbody></table>";
+  } catch (e) {
+    board.innerHTML = `<div class="empty">빈자리를 불러오지 못했습니다. (${esc(e.message)})</div>`;
+  }
+}
+board.addEventListener("click", e => {
+  const c = e.target.closest(".cell");
+  if (!c || c.disabled) return;
+  const h = +c.dataset.hour, name = c.dataset.name;
+  const member = memberType === "정기 회원";
+  const q = member ? `수강증 번호 M-로 ${dateInput.value} ${h}시에 ${name} 예약해 주세요`
+                   : `일반인이에요. ${dateInput.value} ${h}시에 ${name} 예약해 주세요`;
+  pick.hidden = false;
+  pick.innerHTML = `<span><b>${esc(dateInput.value)} ${h}:00~${h + 1}:00</b> · ${esc(name)} ${c.dataset.left}개 남음` +
+                   (member ? " · 수강증 번호를 입력해 주세요" : "") + `</span>` +
+                   `<button type="button" class="send">이 시간으로 예약 문의 →</button>`;
+  pick.querySelector("button").onclick = () => askFromAnywhere(q, member);
+});
+dateInput.addEventListener("change", loadSlots);
+document.querySelectorAll(".seg button").forEach(b => b.addEventListener("click", () => {
+  memberType = b.dataset.member;
+  document.querySelectorAll(".seg button").forEach(x => x.classList.toggle("on", x === b));
+  loadSlots();
+}));
+
+/* ---------- 이용 규정: data/center_rules.md 원문 ---------- */
+let rulesData = [];
+const articles = document.getElementById("articles");
+function drawRules(keyword) {
+  const k = (keyword || "").trim();
+  const list = rulesData.filter(a => !k || (a.title + a.text).includes(k));
+  if (!list.length) { articles.innerHTML = `<div class="empty">"${esc(k)}"이(가) 들어간 조항이 없습니다.</div>`; return; }
+  articles.innerHTML = list.map((a, idx) =>
+    `<details class="article" ${k || idx === 0 ? "open" : ""}>
+       <summary><span class="no">${esc(a.article)}</span><span class="title">${esc(a.title)}</span></summary>
+       <div class="article__body">${render(a.text)}
+         <button type="button" class="btn-line" data-q="${esc(a.title)} 규정에 대해 알려주세요">이 조항 AI에게 묻기 →</button>
+       </div>
+     </details>`).join("");
+}
+async function loadRules() {
+  try {
+    const r = await fetch("/api/rules");
+    if (!r.ok) throw new Error(r.status);
+    rulesData = await r.json();
+    loaded.rules = true;
+    drawRules(document.getElementById("ruleSearch").value);
+  } catch (e) {
+    articles.innerHTML = `<div class="empty">규정을 불러오지 못했습니다. (${esc(e.message)})</div>`;
+  }
+}
+document.getElementById("ruleSearch").addEventListener("input", e => drawRules(e.target.value));
+articles.addEventListener("click", e => {
+  const b = e.target.closest("button[data-q]");
+  if (b) askFromAnywhere(b.dataset.q);
+});
+
+/* ---------- 만족도: 답변마다 별점 1~5 + 한 줄 의견 ---------- */
+function feedbackWidget() {
+  const box = document.createElement("div");
+  box.className = "fb";
+  const label = document.createElement("span");
+  label.textContent = "답변이 도움이 되었나요?";
+  const rate = document.createElement("span");
+  rate.className = "rate";
+  let score = 0;
+  for (let s = 1; s <= 5; s++) {
+    const b = document.createElement("button");
+    b.type = "button"; b.textContent = "★"; b.setAttribute("aria-label", `별점 ${s}점`);
+    b.onclick = () => { score = s; [...rate.children].forEach((x, k) => x.classList.toggle("on", k < s)); };
+    rate.appendChild(b);
+  }
+  const comment = document.createElement("input");
+  comment.placeholder = "한 줄 의견 (선택)"; comment.maxLength = 200;
+  const go = document.createElement("button");
+  go.type = "button"; go.className = "btn-line"; go.textContent = "보내기";
+  go.onclick = async () => {
+    if (!score) { label.textContent = "별점을 먼저 골라 주세요"; return; }
+    go.disabled = true;
+    try {
+      const r = await fetch("/api/feedback", { method: "POST", headers: { "Content-Type": "application/json" },
+                                               body: JSON.stringify({ rating: score, comment: comment.value }) });
+      if (!r.ok) throw new Error(r.status);
+      box.textContent = `의견 감사합니다! (별점 ${score}점)`;
+    } catch (e) { label.textContent = "저장하지 못했습니다. 다시 시도해 주세요"; go.disabled = false; }
+  };
+  box.append(label, rate, comment, go);
+  return box;
+}
+
+/* ---------- 관리자: 대시보드 · 슬롯 관리 · 만족도 (수치는 서버 파이썬 집계) ---------- */
+const tip = document.getElementById("tip");
+const NS = "http://www.w3.org/2000/svg";
+function svgEl(tag, attrs) {
+  const el = document.createElementNS(NS, tag);
+  Object.entries(attrs).forEach(([k, v]) => el.setAttribute(k, v));
+  return el;
+}
+// 아래는 직각, 위는 4px 둥근 막대 (dataviz 마크 규격)
+function topRounded(x, y, w, h, r) {
+  r = Math.min(r, h, w / 2);
+  return `M${x},${y + h}V${y + r}Q${x},${y} ${x + r},${y}H${x + w - r}Q${x + w},${y} ${x + w},${y + r}V${y + h}Z`;
+}
+function showTip(evt, title, rows) {
+  tip.replaceChildren();
+  const t = document.createElement("div"); t.className = "t-title"; t.textContent = title; tip.appendChild(t);
+  rows.forEach(([name, value, color]) => {
+    const row = document.createElement("div"); row.className = "t-row";
+    const left = document.createElement("span");
+    if (color) { const key = document.createElement("i"); key.className = "t-key"; key.style.background = color; left.appendChild(key); }
+    left.appendChild(document.createTextNode(name));
+    const v = document.createElement("b"); v.textContent = value;
+    row.append(left, v); tip.appendChild(row);
+  });
+  tip.style.display = "block";
+  const x = Math.min(evt.clientX + 14, window.innerWidth - tip.offsetWidth - 8);
+  tip.style.left = x + "px"; tip.style.top = (evt.clientY + 14) + "px";
+}
+function hideTip() { tip.style.display = "none"; }
+function niceMax(v) {
+  const step = Math.pow(10, Math.floor(Math.log10(v || 1)));
+  return Math.ceil(v / step / (v / step > 5 ? 2 : 1)) * step * (v / step > 5 ? 2 : 1);
+}
+function cssVar(name) { return getComputedStyle(document.documentElement).getPropertyValue(name).trim(); }
+function table(headers, rows) {
+  return "<table><tr>" + headers.map(h => `<th>${esc(h)}</th>`).join("") + "</tr>" +
+         rows.map(r => "<tr>" + r.map(c => `<td>${esc(c)}</td>`).join("") + "</tr>").join("") + "</table>";
+}
+const pct = v => Math.round(v * 100) + "%";
+
+function drawDaily(daily) {
+  const W = 600, H = 230, L = 36, R = 8, T = 18, B = 28, pw = W - L - R, ph = H - T - B;
+  const max = niceMax(Math.max(...daily.map(d => d.visits)));
+  const band = pw / daily.length, bw = Math.min(24, band * 0.62);
+  const y = v => T + ph - (v / max) * ph;
+  const svg = svgEl("svg", { viewBox: `0 0 ${W} ${H}`, role: "img", "aria-label": "일일 방문자 수, 정기 회원과 일반인 누적 막대" });
+  const axis = svgEl("g", { class: "axis" });
+  for (let i = 0; i <= 4; i++) {
+    const v = max / 4 * i, yy = y(v);
+    axis.appendChild(svgEl("line", { x1: L, x2: W - R, y1: yy, y2: yy }));
+    const t = svgEl("text", { x: L - 6, y: yy + 4, "text-anchor": "end" }); t.textContent = Math.round(v); axis.appendChild(t);
+  }
+  daily.forEach((d, i) => {
+    if (i % 2 === 0 || i === daily.length - 1) {
+      const t = svgEl("text", { x: L + band * i + band / 2, y: H - 8, "text-anchor": "middle" });
+      t.textContent = d.date.slice(5).replace("-", "/"); axis.appendChild(t);
+    }
+  });
+  svg.appendChild(axis);
+  const c1 = cssVar("--series-1"), c2 = cssVar("--series-2");
+  daily.forEach((d, i) => {
+    const x = L + band * i + (band - bw) / 2;
+    const yMember = y(d.member), yTop = y(d.visits);
+    // 정기 회원(아래) · 일반인(위), 사이 2px 표면 간격
+    svg.appendChild(svgEl("rect", { class: "bar", x, y: yMember, width: bw, height: Math.max(0, T + ph - yMember), fill: c1 }));
+    const gh = Math.max(0, yMember - yTop - 2);
+    if (gh > 0) svg.appendChild(svgEl("path", { class: "bar", d: topRounded(x, yTop, bw, gh, 4), fill: c2 }));
+    const hit = svgEl("rect", { x: L + band * i, y: T, width: band, height: ph, fill: "transparent", tabindex: 0 });
+    const show = e => showTip(e, d.date, [["합계", d.visits + "명"], ["정기 회원", d.member + "명", c1], ["일반인", d.guest + "명", c2]]);
+    hit.addEventListener("pointermove", show); hit.addEventListener("pointerleave", hideTip);
+    hit.addEventListener("focus", () => { const b = hit.getBoundingClientRect(); show({ clientX: b.x + b.width / 2, clientY: b.y + 20 }); });
+    hit.addEventListener("blur", hideTip);
+    svg.appendChild(hit);
+  });
+  const last = daily[daily.length - 1];  // 마지막 날만 직접 라벨
+  const lbl = svgEl("text", { class: "lbl", x: L + band * (daily.length - 1) + band / 2, y: y(last.visits) - 6, "text-anchor": "middle" });
+  lbl.textContent = last.visits; svg.appendChild(lbl);
+  document.getElementById("chartDaily").replaceChildren(svg);
+  document.getElementById("tableDaily").innerHTML =
+    table(["날짜", "정기 회원", "일반인", "합계"], daily.map(d => [d.date, d.member, d.guest, d.visits]));
+}
+
+function drawHourly(hourly, threshold) {
+  const W = 520, H = 230, L = 36, R = 8, T = 18, B = 28, pw = W - L - R, ph = H - T - B;
+  const band = pw / 24, bw = Math.min(24, band * 0.62);
+  const y = v => T + ph - v * ph;
+  const svg = svgEl("svg", { viewBox: `0 0 ${W} ${H}`, role: "img", "aria-label": "시간대별 평균 이용률 막대" });
+  const axis = svgEl("g", { class: "axis" });
+  [0, .25, .5, .75, 1].forEach(v => {
+    axis.appendChild(svgEl("line", { x1: L, x2: W - R, y1: y(v), y2: y(v) }));
+    const t = svgEl("text", { x: L - 6, y: y(v) + 4, "text-anchor": "end" }); t.textContent = pct(v); axis.appendChild(t);
+  });
+  hourly.forEach((h, i) => {
+    if (i % 3 === 0) {
+      const t = svgEl("text", { x: L + band * i + band / 2, y: H - 8, "text-anchor": "middle" }); t.textContent = h.hour + "시"; axis.appendChild(t);
+    }
+  });
+  svg.appendChild(axis);
+  const c1 = cssVar("--series-1");
+  hourly.forEach((h, i) => {
+    const x = L + band * i + (band - bw) / 2, hh = Math.max(0, T + ph - y(h.utilization));
+    if (hh > 0) svg.appendChild(svgEl("path", { class: "bar", d: topRounded(x, y(h.utilization), bw, hh, 4), fill: c1 }));
+    if (h.utilization >= threshold) {  // 확대 검토 대상만 직접 라벨
+      const t = svgEl("text", { class: "lbl", x: x + bw / 2, y: y(h.utilization) - 5, "text-anchor": "middle" });
+      t.textContent = pct(h.utilization); svg.appendChild(t);
+    }
+    const hit = svgEl("rect", { x: L + band * i, y: T, width: band, height: ph, fill: "transparent", tabindex: 0 });
+    const show = e => showTip(e, `${h.hour}:00~${h.hour + 1}:00`, [["평균 이용률", pct(h.utilization), c1]].concat(
+      h.utilization >= threshold ? [["상태", "확대 검토"]] : []));
+    hit.addEventListener("pointermove", show); hit.addEventListener("pointerleave", hideTip);
+    hit.addEventListener("focus", () => { const b = hit.getBoundingClientRect(); show({ clientX: b.x + b.width / 2, clientY: b.y + 20 }); });
+    hit.addEventListener("blur", hideTip);
+    svg.appendChild(hit);
+  });
+  svg.appendChild(svgEl("line", { class: "thr", x1: L, x2: W - R, y1: y(threshold), y2: y(threshold) }));
+  const tl = svgEl("text", { class: "thr-lbl", x: L + 4, y: y(threshold) - 5 }); tl.textContent = `확대 검토 ${pct(threshold)}`; svg.appendChild(tl);
+  document.getElementById("chartHourly").replaceChildren(svg);
+  document.getElementById("tableHourly").innerHTML =
+    table(["시간", "평균 이용률", "상태"], hourly.map(h => [`${h.hour}:00`, pct(h.utilization), h.utilization >= threshold ? "확대 검토" : "-"]));
+}
+
+function hbar(name, value, max, display) {
+  return `<div class="hbar"><span>${esc(name)}</span><div class="track"><div class="fill" style="width:${max ? value / max * 100 : 0}%"></div></div><b>${esc(display)}</b></div>`;
+}
+
+function drawAdmin(d) {
+  const k = d.kpis;
+  const fbAvg = d.feedback.average;
+  document.getElementById("kpis").innerHTML = [
+    ["kpi hero", "일 평균 방문자", `${k.avg_daily_visits}<small>명</small>`, `${d.period.from} ~ ${d.period.to} · 총 ${k.visits.toLocaleString()}명`],
+    ["kpi", "평균 이용률", `${pct(k.avg_utilization)}`, "24시간 전체 슬롯 기준"],
+    ["kpi", "피크 시간 이용률", `${pct(k.peak_utilization)}`, `${k.peak_hour}:00~${k.peak_hour + 1}:00`],
+    ["kpi", "정기 회원 비율", `${pct(k.member_share)}`, "방문 기준"],
+    ["kpi", "예정 예약 · 점검", `${k.upcoming_reservations}<small>건</small>`, `점검 슬롯 ${k.closed_slots}개 · 만족도 ${fbAvg ?? "-"}`],
+  ].map(([cls, label, value, sub]) =>
+    `<div class="${cls}"><span class="k-label">${label}</span><span class="k-value">${value}</span><span class="k-sub">${esc(sub)}</span></div>`).join("");
+  drawDaily(d.daily);
+  drawHourly(d.hourly, d.expansion.threshold);
+  const ex = d.expansion.hours;
+  document.getElementById("insight").innerHTML = ex.length
+    ? `<span class="status-warn">⚠ 슬롯 확대 검토 ${ex.length}개 시간대</span>
+       <ul>${ex.map(h => `<li><b>${h.hour}:00~${h.hour + 1}:00</b> 평균 이용률 ${pct(h.utilization)} (기준 ${pct(d.expansion.threshold)})</li>`).join("")}</ul>
+       <span class="admin-note">이용률이 기준을 넘는 시간대는 대기·헛걸음이 생기기 쉬워, 시설 추가나 운영 시간 조정으로 매출을 늘릴 여지가 있습니다.</span>`
+    : `<span>모든 시간대가 확대 기준(${pct(d.expansion.threshold)}) 아래입니다.</span>`;
+  document.getElementById("facilityBars").innerHTML = d.facility.map(f => hbar(f.type, f.utilization, 1, pct(f.utilization))).join("");
+  const fb = d.feedback;
+  const maxCnt = Math.max(1, ...fb.distribution.map(x => x.count));
+  const fbBox = document.getElementById("feedbackBox");
+  fbBox.innerHTML = `<div class="fb-avg"><strong>${fb.average ?? "-"}</strong><span>/ 5 · 응답 ${fb.count}건</span></div>
+    <div class="fb-dist">${fb.distribution.map(x => hbar(`${x.rating}점`, x.count, maxCnt, String(x.count))).join("")}</div>
+    ${fb.count ? "" : '<p class="admin-note">아직 응답이 없습니다. 예약 화면에서 답변 아래 별점을 남겨 보세요.</p>'}`;
+  const ul = document.createElement("ul"); ul.className = "fb-recent";
+  fb.recent.forEach(r => {  // 의견은 신뢰할 수 없는 입력이라 textContent 로 넣는다
+    const li = document.createElement("li");
+    const s = document.createElement("span"); s.className = "stars"; s.textContent = "★".repeat(r.rating);
+    li.append(s, document.createTextNode(r.comment));
+    ul.appendChild(li);
+  });
+  if (fb.recent.length) fbBox.appendChild(ul);
+}
+
+async function loadAdmin() {
+  try {
+    const [dash, closures] = await Promise.all([
+      fetch("/api/admin/dashboard").then(r => { if (!r.ok) throw new Error(r.status); return r.json(); }),
+      fetch("/api/admin/closures").then(r => r.json()),
+    ]);
+    drawAdmin(dash);
+    drawClosures(closures);
+  } catch (e) {
+    document.getElementById("kpis").innerHTML = `<div class="kpi"><span class="k-label">대시보드를 불러오지 못했습니다. (${esc(e.message)})</span></div>`;
+  }
+}
+
+const slotForm = document.getElementById("slotForm");
+const slotMsg = document.getElementById("slotMsg");
+document.getElementById("slotHour").innerHTML = Array.from({ length: 24 }, (_, h) => `<option value="${h}">${h}:00~${h + 1}:00</option>`).join("");
+document.getElementById("slotHour").value = "10";
+document.getElementById("slotFacility").innerHTML =
+  [1, 2, 3, 4, 5].map(n => `<option value="BC-${n}">배팅케이지 ${n}번</option>`).join("") +
+  Array.from({ length: 10 }, (_, i) => `<option value="PM-${i + 1}">피칭머신 ${i + 1}번</option>`).join("");
+function facilityName(id) { const [p, n] = id.split("-"); return (p === "BC" ? "배팅케이지 " : "피칭머신 ") + n + "번"; }
+function drawClosures(list) {
+  const ul = document.getElementById("closures");
+  ul.replaceChildren();
+  if (!list.length) { const li = document.createElement("li"); li.textContent = "점검으로 닫힌 슬롯이 없습니다."; ul.appendChild(li); return; }
+  list.forEach(c => {
+    const li = document.createElement("li");
+    const b = document.createElement("b"); b.textContent = `${c.date} ${c.hour}:00 · ${facilityName(c.facility_id)}`;
+    const s = document.createElement("span"); s.textContent = c.reason;
+    const open = document.createElement("button"); open.type = "button"; open.className = "btn-line"; open.textContent = "다시 열기";
+    open.onclick = () => slotRequest("DELETE", c);
+    li.append(b, s, open); ul.appendChild(li);
+  });
+}
+async function slotRequest(method, body) {
+  slotMsg.className = "form-msg"; slotMsg.textContent = "";
+  try {
+    const r = await fetch("/api/admin/closures", { method, headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+    const data = await r.json();
+    if (!r.ok) throw new Error(data.detail || r.status);
+    slotMsg.className = "form-msg ok";
+    slotMsg.textContent = method === "POST" ? "점검으로 닫았습니다. 시설 안내와 예약 도우미에 바로 반영됩니다." : "다시 열었습니다.";
+    loadAdmin();
+  } catch (e) { slotMsg.className = "form-msg err"; slotMsg.textContent = e.message; }
+}
+slotForm.addEventListener("submit", e => {
+  e.preventDefault();
+  const f = new FormData(slotForm);
+  slotRequest("POST", { date: f.get("date"), hour: +f.get("hour"), facility_id: f.get("facility_id"), reason: f.get("reason") });
+});
+window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => {
+  if (location.hash === "#admin") loadAdmin();  // 다크 모드 전환 시 차트 색을 해당 모드 값으로 다시 그림
+});
+
+show(location.hash.slice(1));
+
+/* ---------- 대화 세션: 같은 세션의 질문은 앞 대화를 이어서 해석한다 ---------- */
+function newSessionId() {
+  return (crypto.randomUUID ? crypto.randomUUID() : Date.now().toString(36) + Math.random().toString(36).slice(2));
+}
+let sessionId = newSessionId();
+function greet() {
+  add("bot", render("안녕하세요! 야구학습센터 **예약 도우미**입니다.\n\n" +
+    "- 빈 시간 조회와 예약을 도와드려요. 앞에서 나눈 대화를 기억하니 \"3번으로 할게요\"처럼 이어서 말씀하셔도 돼요\n" +
+    "- **17시 슬롯(17:00~18:00)**은 정기 회원 전용이에요\n" +
+    "- 오른쪽 **빠른 질문**을 눌러 바로 시작해 보세요"));
+}
+document.getElementById("newChat").addEventListener("click", () => {
+  if (send.disabled) return;
+  sessionId = newSessionId();
+  log.replaceChildren();
+  greet();
+  input.focus();
+});
+greet();
+</script>
+</body>
+</html>

@@ -1,0 +1,26 @@
+# 비밀 값
+.env
+.env.*
+!.env.example
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+
+# 강의 자료(강의실 전용) · 개인 도구 설정
+*.pdf
+ref*.txt
+.claude/
+
+# 에디터·OS
+.vscode/
+.DS_Store
+Thumbs.db
+
+# 벡터 인덱스 (현재는 메모리 InMemoryVectorStore 라 파일 없음. 생기면 제외)
+chroma_db/
+*.faiss
+*.sqlite3

@@ -1,0 +1,41 @@
+{
+  "description": "시설·슬롯 규칙과 예약 현황 더미 데이터. 슬롯 = 시설 1개 × 1시간. hour 17 은 17:00~18:00 슬롯을 뜻한다.",
+  "rules": {
+    "open_24h": true,
+    "slot_unit_minutes": 60,
+    "member_only_hours": [17],
+    "max_reservations_per_slot": 1
+  },
+  "facilities": [
+    {"facility_id": "BC-1", "type": "배팅케이지", "name": "배팅케이지 1번"},
+    {"facility_id": "BC-2", "type": "배팅케이지", "name": "배팅케이지 2번"},
+    {"facility_id": "BC-3", "type": "배팅케이지", "name": "배팅케이지 3번"},
+    {"facility_id": "BC-4", "type": "배팅케이지", "name": "배팅케이지 4번"},
+    {"facility_id": "BC-5", "type": "배팅케이지", "name": "배팅케이지 5번"},
+    {"facility_id": "PM-1", "type": "피칭머신", "name": "피칭머신 1번"},
+    {"facility_id": "PM-2", "type": "피칭머신", "name": "피칭머신 2번"},
+    {"facility_id": "PM-3", "type": "피칭머신", "name": "피칭머신 3번"},
+    {"facility_id": "PM-4", "type": "피칭머신", "name": "피칭머신 4번"},
+    {"facility_id": "PM-5", "type": "피칭머신", "name": "피칭머신 5번"},
+    {"facility_id": "PM-6", "type": "피칭머신", "name": "피칭머신 6번"},
+    {"facility_id": "PM-7", "type": "피칭머신", "name": "피칭머신 7번"},
+    {"facility_id": "PM-8", "type": "피칭머신", "name": "피칭머신 8번"},
+    {"facility_id": "PM-9", "type": "피칭머신", "name": "피칭머신 9번"},
+    {"facility_id": "PM-10", "type": "피칭머신", "name": "피칭머신 10번"}
+  ],
+  "reservations": [
+    {"reservation_id": "R-0001", "date": "2026-11-20", "hour": 19, "facility_id": "BC-1", "member_type": "정기 회원", "card_no": "M-1001", "name": "김민수", "phone": "010-1234-5678"},
+    {"reservation_id": "R-0002", "date": "2026-11-20", "hour": 19, "facility_id": "BC-2", "member_type": "일반인", "card_no": null, "name": "강하준", "phone": "010-7890-1234"},
+    {"reservation_id": "R-0003", "date": "2026-11-20", "hour": 19, "facility_id": "BC-3", "member_type": "정기 회원", "card_no": "M-1003", "name": "이서준", "phone": "010-3456-7890"},
+    {"reservation_id": "R-0004", "date": "2026-11-20", "hour": 19, "facility_id": "BC-4", "member_type": "일반인", "card_no": null, "name": "윤서아", "phone": "010-8901-2345"},
+    {"reservation_id": "R-0005", "date": "2026-11-20", "hour": 19, "facility_id": "BC-5", "member_type": "정기 회원", "card_no": "M-1005", "name": "정하늘", "phone": "010-5678-9012"},
+    {"reservation_id": "R-0006", "date": "2026-11-20", "hour": 19, "facility_id": "PM-1", "member_type": "일반인", "card_no": null, "name": "오지훈", "phone": "010-9012-3456"},
+    {"reservation_id": "R-0007", "date": "2026-11-20", "hour": 17, "facility_id": "BC-2", "member_type": "정기 회원", "card_no": "M-1004", "name": "최유나", "phone": "010-4567-8901"},
+    {"reservation_id": "R-0008", "date": "2026-11-20", "hour": 17, "facility_id": "PM-3", "member_type": "정기 회원", "card_no": "M-1005", "name": "정하늘", "phone": "010-5678-9012"},
+    {"reservation_id": "R-0009", "date": "2026-11-20", "hour": 14, "facility_id": "PM-1", "member_type": "일반인", "card_no": null, "name": "강하준", "phone": "010-7890-1234"},
+    {"reservation_id": "R-0010", "date": "2026-11-20", "hour": 14, "facility_id": "PM-2", "member_type": "일반인", "card_no": null, "name": "윤서아", "phone": "010-8901-2345"},
+    {"reservation_id": "R-0011", "date": "2026-11-20", "hour": 18, "facility_id": "BC-1", "member_type": "일반인", "card_no": null, "name": "오지훈", "phone": "010-9012-3456"},
+    {"reservation_id": "R-0012", "date": "2026-11-21", "hour": 18, "facility_id": "BC-1", "member_type": "정기 회원", "card_no": "M-1003", "name": "이서준", "phone": "010-3456-7890"},
+    {"reservation_id": "R-0013", "date": "2026-11-21", "hour": 10, "facility_id": "BC-2", "member_type": "일반인", "card_no": null, "name": "윤서아", "phone": "010-8901-2345"}
+  ]
+}
