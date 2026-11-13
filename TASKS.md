@@ -104,11 +104,12 @@
 - [x] 5-2. 프로젝트 전용 가상환경에서 requirements.txt 설치·실행 확인
   - 확인: 새 가상환경에서 `pip install -r requirements.txt` 후 `python src/agent.py` 가 동작
   - 결과: py -3.14 로 .venv 새로 생성 → requirements.txt 11개 패키지 고정 버전 설치(종료 코드 0) → src 6개 모듈 import, 동시성 테스트 3/3, python src/agent.py 정상, 새 환경 서버로 /query·화면·시설·규정·관리자·만족도 API 확인. 단 Bedrock 일일 토큰 한도로 Sonnet 4.6 이 막혀 Haiku 폴백으로 동작함(전체 재평가는 한도 해제 후 권장)
-- [ ] 5-3. 구현 시연 캡처본 준비
+- [x] 5-3. 구현 시연 캡처본 준비
   - 확인: POST /query 요청·응답 화면과 LangSmith 트레이스 화면 캡처가 있다
+  - 결과: demo/ 에 시연1(예약 화면)·시연2(만석 질문 → 대안 표·처리 과정·만족도)·시연3(관리자 대시보드)·trace(LangSmith 트레이스) 4장. 민감 정보 노출 없음 확인
 - [ ] 5-4. 폴더명 mini-pjt_{본인이름}, public 저장소 push 또는 zip, Google Form 제출
   - 확인: 폼 제출 완료 화면
-  - 진행: ZIP 준비 완료 — 바탕화면 mini-pjt_조정근.zip (최상위 폴더 mini-pjt_조정근/, 최신 커밋 파일과 동일, .env·venv·chroma_db 제외, 압축 해제본에서 테스트·검색·서버 import 확인). 남은 것: 시연 캡처(5-3)와 Google Form 제출
+  - 진행: ZIP 준비 완료 — 바탕화면 mini-pjt_조정근.zip (최상위 폴더 mini-pjt_조정근/, 최신 커밋 파일과 동일, .env·venv·chroma_db 제외, 압축 해제본에서 테스트·검색·서버 import 확인). GitHub https://github.com/mindace1dev-gif/mini-pjt_cho (public) 반영 완료. 남은 것: Google Form 제출
 
 ## 보류 (사용자 결정 필요)
 - [x] tests/ 추가 여부 → 6-8 에서 동시성 테스트로 추가 (표준 unittest, pytest 로도 실행 가능)
